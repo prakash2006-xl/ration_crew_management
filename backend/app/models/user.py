@@ -13,6 +13,8 @@ class User(db.Model):
     district = db.Column(db.String(50), nullable=False)
     area = db.Column(db.String(100), nullable=False)
     assigned_shop = db.Column(db.Integer, db.ForeignKey('shops.id', ondelete='SET NULL'), nullable=True)
+    notification_pref = db.Column(db.Enum('sms', 'push', 'both', 'none'), default='both')
+    fcm_token = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
@@ -25,5 +27,7 @@ class User(db.Model):
             'district': self.district,
             'area': self.area,
             'assigned_shop': self.assigned_shop,
+            'notification_pref': self.notification_pref,
+            'fcm_token': self.fcm_token,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }

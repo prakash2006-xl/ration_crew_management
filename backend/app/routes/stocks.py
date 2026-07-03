@@ -4,6 +4,7 @@ from app.models.shop import Shop
 from app.extensions import db
 from app.utils.decorators import role_required
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from app.services.notification_service import NotificationService
 
 stocks_bp = Blueprint('stocks', __name__)
 
@@ -54,6 +55,16 @@ def update_stock(shop_id):
         updated_stocks.append(stock)
         
     db.session.commit()
+    
+    # Trigger morning stock alert to citizens
+    try:
+        shop = Shop.query.get(shop_id)
+        if shop:
+            NotificationService.trigger_morning_stock_alert(shop_id, shop.name, updated_stocks)
+    except Exception as e:
+        # Don't fail the API request if notifications fail
+        print(f"Error triggering notifications: {e}")
+        
     return jsonify({"message": "Stock updated", "stocks": [s.to_dict() for s in updated_stocks]}), 200
 
 @stocks_bp.route('/<int:shop_id>/distribute', methods=['PUT'])
@@ -77,4 +88,13 @@ def distribute_stock(shop_id):
     stock.status = determine_status(new_quantity)
     
     db.session.commit()
+    
+    # Trigger critical stock alert if low/out of stock
+    try:
+        shop = Shop.query.get(shop_id)
+        if shop:
+            NotificationService.trigger_critical_stock_alert(shop_id, shop.name, item_name, stock.status)
+    except Exception as e:
+        print(f"Error triggering notifications: {e}")
+        
     return jsonify({"message": f"Distributed {quantity_used} of {item_name}", "stock": stock.to_dict()}), 200
