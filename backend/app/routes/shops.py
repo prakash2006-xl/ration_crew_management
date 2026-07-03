@@ -5,6 +5,7 @@ from app.utils.decorators import role_required
 from flask_jwt_extended import jwt_required
 from app.models.crowd_history import CrowdHistory
 from datetime import datetime
+from app.services.notification_service import NotificationService
 
 shops_bp = Blueprint('shops', __name__)
 
@@ -94,6 +95,15 @@ def update_crowd(shop_id):
     
     try:
         db.session.commit()
+        
+        # Trigger notification if crowd level drops to Low
+        try:
+            # Only trigger if it wasn't already Low (optional but good practice)
+            # For simplicity, trigger on any drop to Low
+            NotificationService.trigger_crowd_alert(shop_id, shop.name, crowd_level)
+        except Exception as e:
+            print(f"Error triggering crowd notification: {e}")
+
         return jsonify({
             "message": "Crowd updated successfully",
             "people_count": people_count,
