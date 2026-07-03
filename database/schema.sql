@@ -10,7 +10,18 @@ CREATE TABLE IF NOT EXISTS shops (
     working_hours_start TIME DEFAULT '08:00:00',
     working_hours_end TIME DEFAULT '20:00:00',
     camera_status BOOLEAN DEFAULT TRUE,
+    current_people_count INT DEFAULT 0,
+    current_crowd_level ENUM('Low', 'Medium', 'High') DEFAULT 'Low',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS crowd_history (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    shop_id INT NOT NULL,
+    people_count INT NOT NULL,
+    crowd_level ENUM('Low', 'Medium', 'High') NOT NULL,
+    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS stocks (
